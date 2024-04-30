@@ -1,0 +1,32 @@
+{
+  "extends": "@tsconfig/svelte/tsconfig.json",
+  "compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"strict": true,
+		"moduleResolution": "bundler",
+		"target": "ES6",
+		"experimentalDecorators": true,
+		"paths": {
+			"$app": [
+				"./src"
+			],
+			"$app/*": [
+				"./src/*"
+			],
+			"$lib": [
+				"./lib"
+			],
+			"$lib/*": [
+				"./lib/*"
+			],
+		}
+  },
+  "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte", "lib/autotracking/index.ts"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}
