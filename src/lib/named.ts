@@ -1,10 +1,10 @@
-import { Autotacking, tracked, updateAction, type Autotrackable } from "$lib/svelte-autotracking";
+import { Autotracked, tracked, updateAction, type IAutotrackable } from "$lib";
 
-@Autotacking
+@Autotracked
 class Named {
 
 	@tracked
-	name = 'The Counter';
+	name = 'The name';
 
 	otherName: string = 'The Counter other name';
 
@@ -19,6 +19,6 @@ class Named {
 	}
 }
 
-interface Named extends Autotrackable<Named> { }
+interface Named extends IAutotrackable<Named> { }
 
 export default Named;
