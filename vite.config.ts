@@ -5,10 +5,15 @@ import { resolve } from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [svelte(), dts({ insertTypesEntry: true })],
+  plugins: [svelte(), dts({ 
+    insertTypesEntry: true,
+    staticImport: true,
+    // rollupTypes: true,
+    include: ['lib/**/*.ts']
+   })],
   build: {
     lib: {
-      entry: 'lib/svelte-autotracking/index.ts',
+      entry: resolve(__dirname, './lib/index.ts'),
       name: 'svelte-autotracking',
       formats: ['es', 'cjs', 'umd'],
       fileName: (format) => `svelte-autotracking.${format}.js`,
@@ -16,11 +21,15 @@ export default defineConfig({
     rollupOptions: {
       external: ['svelte'],
       output: {
+        sourcemapExcludeSources: true,
         globals: {
           svelte: 'svelte',
+          "svelte/store": "svelte/store",
         },
       },
     },
+    minify: true,
+    sourcemap: true,
   },
   resolve: {
     alias: {
