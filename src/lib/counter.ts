@@ -1,5 +1,9 @@
 import { Autotracking, tracked } from "$lib";
 
+
+/**
+ * Counter class with autotracking capabilities.
+ */
 class Counter extends Autotracking {
 
 	@tracked
@@ -19,6 +23,9 @@ class Counter extends Autotracking {
 
 }
 
+/**
+ * DoubleCounter class with autotracking capabilities inheriting from Counter.
+ */
 export class DoubleCounter extends Counter {
 
 	@tracked

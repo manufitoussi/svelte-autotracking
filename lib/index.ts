@@ -32,17 +32,17 @@ export interface IAutotrackableStore<T extends IAutotrackable<T>> {
 }
 
 /**
- * Get the autotrackable store of an autotrackable instance.
+ * Use the autotrackable store of an autotrackable instance.
  * @param instance Autotrackable instance
  * @returns Autotrackable store
  * 
  * @example
  * ```ts
- * import { getStore } from 'svelte-autotracking';
- * const store = getStore(instance);
+ * import { useStore } from 'svelte-autotracking';
+ * const store = useStore(instance);
  * ```
  */
-export function getStore<T extends IAutotrackable<T>>(instance: T): IAutotrackableStore<T> {
+export function useStore<T extends IAutotrackable<T>>(instance: T): IAutotrackableStore<T> {
   return instance.store;
 }
 
