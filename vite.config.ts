@@ -13,10 +13,12 @@ export default defineConfig({
    })],
   build: {
     lib: {
-      entry: resolve(__dirname, './lib/index.ts'),
+      entry: {
+        '': resolve(__dirname, './lib/index.ts'),
+      },
       name: 'svelte-autotracking',
-      formats: ['es', 'cjs', 'umd'],
-      fileName: (format) => `svelte-autotracking.${format}.js`,
+      formats: ['es', 'cjs'],
+      fileName: (format, entryName) => `${entryName ? entryName + '/' : ''}svelte-autotracking.${format}.js`,
     },
     rollupOptions: {
       external: ['svelte'],

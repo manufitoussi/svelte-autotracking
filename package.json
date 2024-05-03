@@ -13,13 +13,13 @@
     "dist"
   ],
   "main": "dist/svelte-autotracking.es.js",
-  "typings": "dist/svelte-autotracking.d.ts",
+  "typings": "dist/index.d.ts",
   "module": "dist/svelte-autotracking.es.js",
   "exports": {
     ".": {
       "import": "./dist/svelte-autotracking.es.js",
-      "require": "./dist/svelte-autotracking.umd.js",
-      "types": "./dist/svelte-autotracking.d.ts"
+      "require": "./dist/svelte-autotracking.cjs.js",
+      "types": "./dist/index.d.ts"
     },
     "./style.css": "./dist/style.css"
   },
