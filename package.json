@@ -1,6 +1,6 @@
 {
   "name": "svelte-autotracking",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "An autotracking solution to simplify using stores in Svelte with class objects",
   "repository": {
     "type": "git",
