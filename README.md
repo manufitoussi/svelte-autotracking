@@ -55,8 +55,8 @@ And then, you can use it in your Svelte components like this:
 </script>
 
 <h1>{$counter.count}</h1>
-<button on:click={() => $counter.increment}>+</button>
-<button on:click={() => $counter.decrement}}>-</button>
+<button on:click={() => $counter.increment()}>+</button>
+<button on:click={() => $counter.decrement()}>-</button>
 ```
 
 So, when you click on the buttons, the `count` property will be automatically updated and the component will re-render. And even if you create a derived class from the `Counter`.
