@@ -1,4 +1,4 @@
-import { Autotracking, tracked, updateAction, type IAutotrackable } from "$lib";
+import { Autotracking, tracked } from "$lib";
 
 class Counter extends Autotracking {
 

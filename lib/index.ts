@@ -1,21 +1,7 @@
+import { writable, type Invalidator, type Subscriber, type Unsubscriber, type Updater } from "svelte/store";
 import { isEqual } from "./tools";
-import { writable } from "svelte/store";
 
-import { type Invalidator, type Subscriber, type Unsubscriber, type Updater } from "svelte/store";
-
-export interface IAutotrackableStore<T extends IAutotrackable<T>> {
-  subscribe: (run: Subscriber<T>, invalidate?: Invalidator<T>) => Unsubscriber;
-  update: (fn: Updater<T>) => void;
-  set: (value: T) => void;
-}
-
-export interface IAutotrackable<T> {
-  _store: any;
-  get store(): any;
-  updateSubscribers(): void;
-}
-
-function _createAutotracked<T extends IAutotrackable<T>>(instance: T) {
+function createAutotracked<T extends IAutotrackable<T>>(instance: T) {
   const { subscribe, update, set } = writable(instance);
   const store = {
     subscribe,
@@ -25,6 +11,26 @@ function _createAutotracked<T extends IAutotrackable<T>>(instance: T) {
   instance._store = store;
   return store;
 }
+
+/**
+ * Autotrackable interface.
+ */
+export interface IAutotrackable<T> {
+  _store: any;
+  get store(): any;
+  updateSubscribers(): void;
+}
+
+
+/**
+ * Autotrackable store interface.
+ */
+export interface IAutotrackableStore<T extends IAutotrackable<T>> {
+  subscribe: (run: Subscriber<T>, invalidate?: Invalidator<T>) => Unsubscriber;
+  update: (fn: Updater<T>) => void;
+  set: (value: T) => void;
+}
+
 /**
  * Get the autotrackable store of an autotrackable instance.
  * @param instance Autotrackable instance
@@ -120,7 +126,7 @@ export function Autotracked<T extends { new(...args: any[]): {} }>(constructor: 
 
     get store() {
       if (!this._store) {
-        this._store = _createAutotracked(this);
+        this._store = createAutotracked(this);
       }
 
       return this._store;
@@ -159,20 +165,41 @@ export function Autotracked<T extends { new(...args: any[]): {} }>(constructor: 
  * 
  * ```
  */
-export class Autotracking implements IAutotrackable<Autotracking> {
-  _store: any = null;
+export class Autotracking extends AutotrackingFromStore() { };
 
-  get store() {
-    if (!this._store) {
-      this._store = _createAutotracked(this);
+
+/**
+ * Base class to add autotracking capabilities to a class. Store is provided by a function that return the main Autotraking object.
+ * 
+ * @param fromStore Function that returns the main Autotraking object.
+ * @returns The new class with autotracking capabilities.
+ * 
+ */
+export function AutotrackingFromStore(fromStore: (() => IAutotrackable<Autotracking>) | undefined = undefined) {
+  return class Autotracking implements IAutotrackable<Autotracking> {
+    _store: any = null;
+
+    _getStore() {
+      if (fromStore)
+        return fromStore.bind(this)()?.store;
+
+      if (!this._store) {
+        this._store = createAutotracked(this);
+      }
+
+      return this._store;
     }
 
-    return this._store;
-  }
+    get store() {
+      return this._getStore();
+    }
 
-  updateSubscribers() {
-    if (this._store)
-      this._store.update(() => this);
+    updateSubscribers() {
+      if (fromStore)
+        return fromStore.bind(this)()?.updateSubscribers();
+      if (this._store)
+        this._store.update(() => this);
+    }
   }
 }
 
