@@ -18,27 +18,27 @@ You can create a class with autotracking capabilities by extending the `Autotrac
 
 ```ts
 
-import { Autotracking, tracked } from "$lib";
+import { Autotracking, tracked } from "svelte-autotracking";
 
 /**
  * Counter class with autotracking capabilities.
  */
 export class Counter extends Autotracking {
 
-	@tracked
-	_count = 0;
+  @tracked
+  _count = 0;
 
-	get count() {
-		return this._count;
-	}
+  get count() {
+    return this._count;
+  }
 
-	increment() {
-		this._count += 1;
-	}
+  increment() {
+    this._count += 1;
+  }
 
-	decrement() {
-		this._count -= 1;
-	}
+  decrement() {
+    this._count -= 1;
+  }
 
 }
 
