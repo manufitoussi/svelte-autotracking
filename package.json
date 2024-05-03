@@ -1,8 +1,22 @@
 {
   "name": "svelte-autotracking",
-  "private": true,
   "version": "0.1.0",
+  "description": "An autotracking solution to simplify using stores in Svelte with class objects",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/manufitoussi/svelte-autotracking.git"
+  },
+  "homepage": "https://github.com/manufitoussi/svelte-autotracking",
   "type": "module",
+  "keywords": [
+    "svelte",
+    "store",
+    "autotracking",
+    "class",
+    "tracked"
+  ],
+  "author": "Emmanuel FITOUSSI",
+  "license": "MIT",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
