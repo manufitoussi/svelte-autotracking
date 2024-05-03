@@ -1,7 +1,18 @@
 import { Autotracked, tracked, updateAction, type IAutotrackable } from "$lib";
 
+class Base {
+	anyField = 'anyField';
+
+	anyMethod() {
+		console.log('anyMethod');
+	}
+}
+
+/**
+ * Named class with autotracking capabilities from decorator.
+ */
 @Autotracked
-class Named {
+class Named extends Base {
 
 	@tracked
 	name = 'The name';
