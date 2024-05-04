@@ -1,5 +1,8 @@
 # Svelte Autotracking
 
+![example workflow](https://github.com/manufitoussi/svelte-autotracking/actions/workflows/ci.yml/badge.svg)
+
+
 > A library to automatically track changes on Svelte stores with decorators.
 
 It's freely inspired by the [`@tracked` decorator](https://api.emberjs.com/ember/release/functions/@glimmer%2Ftracking/tracked) from Ember.js, and it's meant to be used with [Svelte stores](https://svelte.dev/docs/svelte-store).
