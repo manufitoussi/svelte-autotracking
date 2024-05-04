@@ -8,6 +8,9 @@ function createAutotracked<T extends IAutotrackable<T>>(instance: T) {
     update,
     set,
     _isAutotracking: true,
+    isAutotracking() {
+      return store._isAutotracking;
+    },
     stopAutotrack() {
       store._isAutotracking = false;
     },
@@ -15,18 +18,25 @@ function createAutotracked<T extends IAutotrackable<T>>(instance: T) {
       store._isAutotracking = true;
     },
   };
-  instance._store = store;
+  instance.__autotracking_store = store;
   return store;
+}
+
+function getTrackedValue<T extends IAutotrackable<T>>(instance: T, key: string): any {
+  return (instance as any)[`__autotracking_tracked_${key}`];
+}
+
+function setTrackedValue<T extends IAutotrackable<T>>(instance: T, key: string, value: any) {
+  (instance as any)[`__autotracking_tracked_${key}`] = value;
 }
 
 /**
  * Autotrackable interface.
  */
 export interface IAutotrackable<T> {
-  _store: any;
-  get store(): any;
-  updateSubscribers(): void;
-  silentSet: (propertyKey: string, value: any) => void;
+  __autotracking_store: any;
+  __autotracking_getStore(): any;
+  __autotracking_update(): void;
 }
 
 
@@ -38,6 +48,7 @@ export interface IAutotrackableStore<T extends IAutotrackable<T>> {
   update: (fn: Updater<T>) => void;
   set: (value: T) => void;
   _isAutotracking: boolean;
+  isAutotracking: () => boolean;
   stopAutotrack: () => void;
   startAutotrack: () => void;
 }
@@ -54,7 +65,7 @@ export interface IAutotrackableStore<T extends IAutotrackable<T>> {
  * ```
  */
 export function useStore<T extends IAutotrackable<T>>(instance: T): IAutotrackableStore<T> {
-  return instance.store;
+  return instance.__autotracking_getStore();
 }
 
 /**
@@ -82,23 +93,41 @@ export function tracked<T>(target: T, key: string) {
 
   const Class = target as T;
 
-  Object.defineProperty(Class, `_${key}`, {
+  Object.defineProperty(Class, `__autotracking_tracked_${key}`, {
     writable: true,
     value: undefined,
   });
 
   Object.defineProperty(Class, key, {
     get() {
-      return this[`_${key}`];
+      return getTrackedValue(this, key);
     },
     set(value) {
-      const oldValue = this[`_${key}`];
+      const oldValue = getTrackedValue(this, key);
       if (isEqual(oldValue, value)) return;
-      this[`_${key}`] = value;
-      if (this.store?._isAutotracking)
-        this.updateSubscribers();
+      setTrackedValue(this, key, value);
+      if (useStore(this)?.isAutotracking())
+        triggerUpdate(this);
     },
   });
+}
+
+/**
+ * Set a tracked field value without triggering an update to subscribers.
+ * @param instance Autotrackable instance.
+ * @param propertyKey Field name. 
+ * @param value New value.
+ */
+export function silentSet<T extends IAutotrackable<T>>(instance: T, propertyKey: string, value: any) {
+  setTrackedValue(instance, propertyKey, value);
+}
+
+/**
+ * Trigger an update to subscribers of an autotrackable instance.
+ * @param instance Autotrackable instance.
+ */
+export function triggerUpdate<T extends IAutotrackable<T>>(instance: T) {
+  instance?.__autotracking_update();
 }
 
 /**
@@ -108,8 +137,8 @@ export function tracked<T>(target: T, key: string) {
  * - A store property is added to the class instance.
  * - The store property is updated when a tracked field is modified.
  * - The store property can be used to subscribe to changes.
- * - The updateAction decorator can be used to automatically update subscribers after a method call.
- * - The manual call to updateSubscribers() can be used to force an update.
+ * - The updateAfter decorator can be used to automatically update subscribers after a method call.
+ * - The manual call of triggerUpdate can be used to force an update.
  * 
  * **Note:** Don't forget to extend the class interface with  {@link IAutotrackable}.
  * 
@@ -134,23 +163,19 @@ export function tracked<T>(target: T, key: string) {
  */
 export function Autotracked<T extends { new(...args: any[]): {} }>(constructor: T) {
   class AutoTrackingClass extends constructor implements IAutotrackable<T> {
-    _store: any = null;
+    __autotracking_store: any = null;
 
-    get store() {
-      if (!this._store) {
-        this._store = createAutotracked(this);
+    __autotracking_getStore() {
+      if (!this.__autotracking_store) {
+        this.__autotracking_store = createAutotracked(this);
       }
 
-      return this._store;
+      return this.__autotracking_store;
     }
 
-    silentSet(propertyKey: string, value: any) {
-      (this as any)[`_${propertyKey}`] = value;
-    }
-
-    updateSubscribers() {
-      if (this._store)
-        this._store.update(() => this);
+    __autotracking_update() {
+      if (this.__autotracking_store)
+        this.__autotracking_store.update(() => this);
     }
 
   };
@@ -165,8 +190,8 @@ export function Autotracked<T extends { new(...args: any[]): {} }>(constructor: 
  * - A store property is added to the class instance.
  * - The store property is updated when a tracked field is modified.
  * - The store property can be used to subscribe to changes.
- * - The updateAction decorator can be used to automatically update subscribers after a method call.
- * - The manual call to updateSubscribers() can be used to force an update.
+ * - The updateAfter decorator can be used to automatically update subscribers after a method call.
+ * - The manual call of triggerUpdate() can be used to force an update.
  * 
  * @example
  * ```ts
@@ -193,32 +218,26 @@ export class Autotracking extends AutotrackingFromStore() { };
  */
 export function AutotrackingFromStore(fromStore: (() => IAutotrackable<Autotracking>) | undefined = undefined) {
   return class Autotracking implements IAutotrackable<Autotracking> {
-    _store: any = null;
+    __autotracking_store: any = null;
 
-    _getStore() {
-      if (fromStore)
-        return fromStore.bind(this)()?.store;
-
-      if (!this._store) {
-        this._store = createAutotracked(this);
+    __autotracking_getStore() {
+      if (fromStore) {
+        const owner = fromStore.bind(this)();
+        return owner ? useStore(owner) : null;
       }
 
-      return this._store;
+      if (!this.__autotracking_store) {
+        this.__autotracking_store = createAutotracked(this);
+      }
+
+      return this.__autotracking_store;
     }
 
-    get store() {
-      return this._getStore();
-    }
-
-    silentSet(propertyKey: string, value: any) {
-      (this as any)[`_${propertyKey}`] = value;
-    }
-
-    updateSubscribers() {
+    __autotracking_update() {
       if (fromStore)
-        return fromStore.bind(this)()?.updateSubscribers();
-      if (this._store)
-        this._store.update(() => this);
+        return triggerUpdate(fromStore.bind(this)());
+      if (this.__autotracking_store)
+        this.__autotracking_store.update(() => this);
     }
   }
 }
@@ -229,11 +248,11 @@ export function AutotrackingFromStore(fromStore: (() => IAutotrackable<Autotrack
  * @param propertyKey Method name.
  * @param descriptor Method descriptor.
  */
-export function updateAction<T extends IAutotrackable<T>>(target: T, propertyKey: string, descriptor: PropertyDescriptor) {
+export function updateAfter<T extends IAutotrackable<T>>(target: T, propertyKey: string, descriptor: PropertyDescriptor) {
   const originalMethod = descriptor.value;
   descriptor.value = function (...args: any[]) {
     const result = originalMethod.apply(this, args);
-    (this as T).updateSubscribers();
+    triggerUpdate(this as T);
     return result;
   }
 }

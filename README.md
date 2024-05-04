@@ -274,31 +274,31 @@ or
 
 ### Trigger a manual update
 
-You can trigger a manual update by calling the `updateSubscribers` method of the store.
+You can trigger a manual update by calling the `triggerUpdate` method the autotracked object.
 
 ```ts
-
+import { triggerUpdate } from "svelte-autotracking";
 import { MyClass } from "./MyClass.js";
 
 const myClass = new MyClass();
 
 // trigger a manual update
-myClass.updateSubscribers();
+triggerUpdate(myClass);
 
 ```
 
-### Use the `@updateAction` decorator
+### Use the `@updateAfter` decorator
 
-You can use the `@updateAction` decorator to automatically update the store when a method is called event if no property is decorated with `@tracked`.
+You can use the `@updateAfter` decorator to automatically update the store when a method is called event if no property is decorated with `@tracked`.
 
 ```ts
 
-import { Autotracking, tracked, updateAction } from "svelte-autotracking";
+import { Autotracking, tracked, updateAfter } from "svelte-autotracking";
 
 export class MyClass extends Autotracking {
   property = "value";
 
-  @updateAction
+  @updateAfter
   method(newValue: string) {
     this.property = newValue;
   }

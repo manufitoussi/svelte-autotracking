@@ -1,6 +1,6 @@
 import { Counter, DoubleCounter } from '$app/lib/counter';
 import { Owner } from '$app/lib/nested';
-import { useStore } from '$lib';
+import { silentSet, triggerUpdate, useStore } from '$lib';
 import { describe, expect, it } from 'vitest';
 
 describe('autotraking', () => {
@@ -34,13 +34,13 @@ describe('autotraking', () => {
 		counter.decrement();
 		expect(updateCount).toBe(4);
 
-		counter.updateSubscribers();
+		triggerUpdate(counter);
 		expect(updateCount).toBe(5);
 
-		counter.silentSet('_count', 6);
+		silentSet(counter, '_count', 6);
 		expect(updateCount).toBe(5);
 		currentCount = 6;
-		counter.updateSubscribers();
+		triggerUpdate(counter);
 		expect(updateCount).toBe(6);
 
 		currentCount = 10;
@@ -119,18 +119,18 @@ describe('autotraking', () => {
 		store.startAutotrack();
 
 		expect(updateCount).toBe(2);
-		nested.updateSubscribers();
+		triggerUpdate(nested);
 		expect(updateCount).toBe(3);
 
 		currentCount = 3;
 		nested.increment();
 		expect(updateCount).toBe(4);
-		
+
 		currentCount = 10;
-		nested.silentSet('count', 10);
+		silentSet(nested, 'count', 10);
 		expect(updateCount).toBe(4);
 
-		nested.updateSubscribers();
+		triggerUpdate(nested);
 		expect(updateCount).toBe(5);
 	});
 
