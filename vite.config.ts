@@ -1,16 +1,21 @@
-import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-import dts from 'vite-plugin-dts';
+import { svelteTesting } from '@testing-library/svelte/vite';
 import { resolve } from 'path';
+import dts from 'vite-plugin-dts';
+import { defineConfig } from 'vitest/config';
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [svelte(), dts({ 
-    insertTypesEntry: true,
-    staticImport: true,
-    // rollupTypes: true,
-    include: ['lib/**/*.ts']
-   })],
+export default defineConfig(({ mode }) => ({
+  plugins: [
+    svelte(),
+    svelteTesting(),
+    dts({
+      insertTypesEntry: true,
+      staticImport: true,
+      // rollupTypes: true,
+      include: ['lib/**/*.ts']
+    }),
+  ],
   build: {
     lib: {
       entry: {
@@ -38,8 +43,15 @@ export default defineConfig({
       $app: resolve("./src"),
       $lib: resolve("./lib"),
     },
+    conditions: mode === 'test' ? ['browser'] : [],
   },
 
-})
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./vitest-setup.js'],
+    include: ['src/**/*.{test,spec}.{js,ts}'],
+  },
+
+}))
 
 
