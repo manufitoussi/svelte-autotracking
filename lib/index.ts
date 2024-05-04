@@ -7,6 +7,13 @@ function createAutotracked<T extends IAutotrackable<T>>(instance: T) {
     subscribe,
     update,
     set,
+    _isAutotracking: true,
+    stopAutotrack() {
+      store._isAutotracking = false;
+    },
+    startAutotrack() {
+      store._isAutotracking = true;
+    },
   };
   instance._store = store;
   return store;
@@ -19,6 +26,7 @@ export interface IAutotrackable<T> {
   _store: any;
   get store(): any;
   updateSubscribers(): void;
+  silentSet: (propertyKey: string, value: any) => void;
 }
 
 
@@ -29,6 +37,9 @@ export interface IAutotrackableStore<T extends IAutotrackable<T>> {
   subscribe: (run: Subscriber<T>, invalidate?: Invalidator<T>) => Unsubscriber;
   update: (fn: Updater<T>) => void;
   set: (value: T) => void;
+  _isAutotracking: boolean;
+  stopAutotrack: () => void;
+  startAutotrack: () => void;
 }
 
 /**
@@ -84,8 +95,9 @@ export function tracked<T>(target: T, key: string) {
       const oldValue = this[`_${key}`];
       if (isEqual(oldValue, value)) return;
       this[`_${key}`] = value;
-      this.updateSubscribers();
-    }
+      if (this.store?._isAutotracking)
+        this.updateSubscribers();
+    },
   });
 }
 
@@ -130,6 +142,10 @@ export function Autotracked<T extends { new(...args: any[]): {} }>(constructor: 
       }
 
       return this._store;
+    }
+
+    silentSet(propertyKey: string, value: any) {
+      (this as any)[`_${propertyKey}`] = value;
     }
 
     updateSubscribers() {
@@ -192,6 +208,10 @@ export function AutotrackingFromStore(fromStore: (() => IAutotrackable<Autotrack
 
     get store() {
       return this._getStore();
+    }
+
+    silentSet(propertyKey: string, value: any) {
+      (this as any)[`_${propertyKey}`] = value;
     }
 
     updateSubscribers() {
