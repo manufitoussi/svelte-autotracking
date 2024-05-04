@@ -308,6 +308,19 @@ export class MyClass extends Autotracking {
 
 In this example, the `method` method will automatically update the store when it's called, even if the `property` property is not decorated with `@tracked`. So, in a Svelte component, when you call the `method` method, the component will re-render.
 
+### Silent change value without triggering an update
+
+You can change the value of a property without triggering an update by using the `silentSet` function.
+
+```ts
+import { silentSet } from "svelte-autotracking";
+
+const myClass = new MyClass();
+
+// change the value without triggering an update
+silentSet(myClass, "property", "new value");
+
+```
 
 ## Explanation
 
