@@ -1,4 +1,4 @@
-import { Autotracking, tracked, updateAction } from "$lib";
+import { Autotracking, tracked, updateAfter, silentSet } from "$lib";
 
 /**
  * Counter class with autotracking capabilities.
@@ -20,10 +20,9 @@ export class Counter extends Autotracking {
 		this._count -= 1;
 	}
 
-	@updateAction
+	@updateAfter
 	forceCount(value: number) {
-		// @ts-ignore
-		this.__count = value;
+		silentSet(this, '_count', value);
 	}
 
 }
@@ -58,16 +57,16 @@ export class DoubleCounter extends Counter {
 		this.decrement2();
 	}
 
-	@updateAction
+	@updateAfter
 	incrementAll() {
-		this.silentSet('_count', this.count + 1);
-		this.silentSet('_count2', this.count2 + 1);
+		silentSet(this, '_count', this.count + 1);
+		silentSet(this, '_count2', this.count2 + 1);
 	}
 
-	@updateAction
+	@updateAfter
 	decrementAll() {
-		this.silentSet('_count', this.count - 1);
-		this.silentSet('_count2', this.count2 - 1);
+		silentSet(this, '_count', this.count - 1);
+		silentSet(this, '_count2', this.count2 - 1);
 	}
 
 }

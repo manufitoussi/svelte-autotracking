@@ -1,4 +1,4 @@
-import { Autotracked, tracked, updateAction, type IAutotrackable } from "$lib";
+import { Autotracked, tracked, updateAfter, type IAutotrackable } from "$lib";
 
 class Base {
 	anyField = 'anyField';
@@ -23,7 +23,7 @@ class Named extends Base {
 		this.name = name;
 	}
 
-	@updateAction
+	@updateAfter
 	resetOtherName() {
 		console.log('resetOtherName');
 		this.otherName = 'The Counter other name has changed.';
