@@ -83,7 +83,8 @@ If you're using TypeScript, you can enable it by adding the following configurat
 ```json
 {
   "compilerOptions": {
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "target": "ES6" // or higher
   }
 }
 ```
