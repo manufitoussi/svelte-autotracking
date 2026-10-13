@@ -1,7 +1,7 @@
 {
   "name": "svelte-autotracking",
-  "version": "0.2.0",
-  "description": "An autotracking solution to simplify using stores in Svelte with class objects",
+  "version": "0.3.0",
+  "description": "An autotracking solution to simplify using stores in Svelte 3 and 4 with class objects",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/manufitoussi/svelte-autotracking.git"
@@ -25,28 +25,26 @@
     "test": "vitest run",
     "coverage": "vitest --coverage",
     "test:ui": "vitest --ui",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepublishOnly": "yarn run check && yarn test && yarn build"
   },
   "files": [
     "dist"
   ],
-  "main": "dist/svelte-autotracking.es.js",
-  "typings": "dist/index.d.ts",
+  "sideEffects": false,
+  "main": "dist/svelte-autotracking.cjs",
   "module": "dist/svelte-autotracking.es.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/svelte-autotracking.es.js",
-      "require": "./dist/svelte-autotracking.cjs.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/svelte-autotracking.cjs"
     },
-    "./style.css": "./dist/style.css"
+    "./package.json": "./package.json"
   },
-  "typesVersions": {
-    "*": {
-      "*": [
-        "./dist/*"
-      ]
-    }
+  "peerDependencies": {
+    "svelte": "^3.0.0 || ^4.0.0"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^3.1.0",

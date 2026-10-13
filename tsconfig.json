@@ -27,6 +27,6 @@
 			],
 		}
   },
-  "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte", "lib/autotracking/index.ts"],
+  "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte", "lib/**/*.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
