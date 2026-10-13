@@ -23,4 +23,5 @@ jobs:
     - run: yarn install --frozen-lockfile
     # Authenticated with npm trusted publishing (OIDC), no token needed.
     # Provenance is generated automatically.
-    - run: npm publish --access public
+    # The version is staged: a maintainer must approve it with 2FA (`npm stage approve <stage-id>`).
+    - run: npm stage publish
