@@ -1,5 +1,3 @@
-const dev =  false;// import.meta.env.DEV;
-
 /**
  * Convert a string to a class name
  * @param name
@@ -158,26 +156,3 @@ export function isEqual(v1: any, v2: any, { isWeakComparison = false } = {}) {
       return true;
   }
 }
-
-export function assert(message: string, condition: boolean) {
-  if (!dev) {
-    console.assert(condition, message)
-  }
-}
-
-export const logger = {
-  debug: (...args: any[]) => {
-    if (dev) {
-      console.debug(...args);
-    }
-  },
-  info: (...args: any[]) => {
-    console.info(...args);
-  },
-  warn: (...args: any[]) => {
-    console.warn(...args);
-  },
-  error: (...args: any[]) => {
-    console.error(...args);
-  },
-};

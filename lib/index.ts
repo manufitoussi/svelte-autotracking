@@ -30,6 +30,39 @@ function setTrackedValue<T extends IAutotrackable<T>>(instance: T, key: string, 
   (instance as any)[`__autotracking_tracked_${key}`] = value;
 }
 
+const TRACKED_KEYS = '__autotracking_tracked_keys';
+
+function registerTrackedKey(prototype: any, key: string) {
+  if (!Object.prototype.hasOwnProperty.call(prototype, TRACKED_KEYS)) {
+    Object.defineProperty(prototype, TRACKED_KEYS, {
+      value: new Set<string>(prototype[TRACKED_KEYS]),
+    });
+  }
+  prototype[TRACKED_KEYS].add(key);
+}
+
+const warnedClasses = new WeakSet<object>();
+
+/**
+ * Warn when tracked fields are shadowed by own instance properties.
+ *
+ * This happens when class fields use the [[Define]] semantics
+ * (`useDefineForClassFields: true`, the default with a `target` >= ES2022):
+ * the instance field hides the accessor installed by `@tracked`, so changes are never tracked.
+ */
+function checkTrackedFields(instance: any) {
+  const keys: Set<string> | undefined = instance?.[TRACKED_KEYS];
+  if (!keys || warnedClasses.has(instance.constructor)) return;
+  const shadowed = [...keys].filter((key) => Object.prototype.hasOwnProperty.call(instance, key));
+  if (!shadowed.length) return;
+  warnedClasses.add(instance.constructor);
+  console.warn(
+    `[svelte-autotracking] Tracked field(s) ${shadowed.map((key) => `"${key}"`).join(', ')} of ${instance.constructor.name} ` +
+    'are shadowed by instance properties and will not be tracked. ' +
+    'Set "useDefineForClassFields": false in your tsconfig.json (or use the legacy decorators with "loose" class fields in Babel).'
+  );
+}
+
 /**
  * Autotrackable interface.
  */
@@ -71,14 +104,14 @@ export function useStore<T extends IAutotrackable<T>>(instance: T): IAutotrackab
 /**
  * Field decorator to declare as tracked.
  * 
- * Must be used in a class decorated with {@link Autotracking} or which extends one.
+ * Must be used in a class decorated with {@link Autotracked} or which extends {@link Autotracking}.
  * @param target Autotrackable class.
  * @param key Name of the field to track.
  * @example
  * ```ts
- * import { tracked, Autotacking, IAutotrackable } from 'svelte-autotracking';
+ * import { tracked, Autotracked, type IAutotrackable } from 'svelte-autotracking';
  * 
- * ⁣@Autotacking
+ * ⁣@Autotracked
  * class Named {
  * 
  *   ⁣@tracked
@@ -92,6 +125,8 @@ export function useStore<T extends IAutotrackable<T>>(instance: T): IAutotrackab
 export function tracked<T>(target: T, key: string) {
 
   const Class = target as T;
+
+  registerTrackedKey(Class, key);
 
   Object.defineProperty(Class, `__autotracking_tracked_${key}`, {
     writable: true,
@@ -144,9 +179,9 @@ export function triggerUpdate<T extends IAutotrackable<T>>(instance: T) {
  * 
  * @example
  * ```ts
- * import { Autotacking, tracked, IAutotrackable } from 'svelte-autotracking';
+ * import { Autotracked, tracked, type IAutotrackable } from 'svelte-autotracking';
  * 
- * ⁣@Autotacking
+ * ⁣@Autotracked
  * class Named {
  * 
  *   ⁣@tracked
@@ -166,6 +201,7 @@ export function Autotracked<T extends { new(...args: any[]): {} }>(constructor: 
     __autotracking_store: any = null;
 
     __autotracking_getStore() {
+      checkTrackedFields(this);
       if (!this.__autotracking_store) {
         this.__autotracking_store = createAutotracked(this);
       }
@@ -221,6 +257,7 @@ export function AutotrackingFromStore(fromStore: (() => IAutotrackable<Autotrack
     __autotracking_store: any = null;
 
     __autotracking_getStore() {
+      checkTrackedFields(this);
       if (fromStore) {
         const owner = fromStore.bind(this)();
         return owner ? useStore(owner) : null;

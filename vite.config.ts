@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => ({
       },
       name: 'svelte-autotracking',
       formats: ['es', 'cjs'],
-      fileName: (format, entryName) => `${entryName ? entryName + '/' : ''}svelte-autotracking.${format}.js`,
+      fileName: (format, entryName) => `${entryName ? entryName + '/' : ''}svelte-autotracking.${format === 'cjs' ? 'cjs' : `${format}.js`}`,
     },
     rollupOptions: {
       external: ['svelte'],
@@ -35,6 +35,7 @@ export default defineConfig(({ mode }) => ({
         },
       },
     },
+    copyPublicDir: false,
     minify: true,
     sourcemap: true,
   },
