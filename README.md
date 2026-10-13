@@ -5,6 +5,10 @@
 
 > A library to automatically track changes on Svelte stores with decorators.
 
+> [!NOTE]
+> This library targets **Svelte 3 and 4**, which rely on stores for reactivity.
+> If you use **Svelte 5**, you don't need it: use [`$state` in classes](https://svelte.dev/docs/svelte/$state#Classes) instead.
+
 It's freely inspired by the [`@tracked` decorator](https://api.emberjs.com/ember/release/functions/@glimmer%2Ftracking/tracked) from Ember.js, and it's meant to be used with [Svelte stores](https://svelte.dev/docs/svelte-store).
 
 If you're using Svelte stores, you know that you need create complex logic (like derived stores and custom store) to track changes on your components. Even the simplest of them.
@@ -77,20 +81,28 @@ or
 yarn add svelte-autotracking
 ```
 
-## Requirements : Decorators
+## Requirements
 
-This library uses the [decorators](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Public_class_fields#decorators) feature of JavaScript, which is currently a stage 2 proposal. So, you need to enable it in your project.
+- Svelte 3 or 4.
+- Legacy decorators (TypeScript `experimentalDecorators` or Babel `legacy` decorators).
 
-If you're using TypeScript, you can enable it by adding the following configuration to your `tsconfig.json` file:
+### Decorators
+
+This library uses the **legacy** (TypeScript "experimental") [decorators](https://github.com/tc39/proposal-decorators). The standard decorators (TC39 stage 3, used by TypeScript 5+ when `experimentalDecorators` is off) are not supported yet.
+
+If you're using TypeScript, add the following configuration to your `tsconfig.json` file:
 
 ```json
 {
   "compilerOptions": {
     "experimentalDecorators": true,
-    "target": "ES6" // or higher
+    "useDefineForClassFields": false
   }
 }
 ```
+
+> [!IMPORTANT]
+> `useDefineForClassFields` defaults to `true` when `target` is `ES2022` or higher (or `ESNext`). In that case, class fields are defined on the instance and hide the accessors created by `@tracked`, so **changes are not tracked**. Keep it to `false`. The library logs a warning when it detects this situation.
 
 If you're using Babel, you can enable it by installing the `@babel/plugin-proposal-decorators` plugin:
 
@@ -103,7 +115,8 @@ And then, add it to your Babel configuration:
 ```json
 {
   "plugins": [
-    ["@babel/plugin-proposal-decorators", { "legacy": true }]
+    ["@babel/plugin-proposal-decorators", { "legacy": true }],
+    ["@babel/plugin-transform-class-properties", { "loose": true }]
   ]
 }
 ```
@@ -146,8 +159,13 @@ export class MyClass extends Autotracking {
 So, when you change the `property` value, the component will re-render. even :
   - if you change the value directly
   - if you change the value in a method (like `method` in the example above)
-  - if you change the value in a nested object
+  - if you change the value in a nested object (see [nested objects](#use-the-tracked-decorator-in-a-nested-object))
   - if you derive a new class from `MyClass`
+
+> [!NOTE]
+> Only **assignments** are tracked. Mutating a value in place (`this.items.push(item)`, `this.user.name = 'x'`) does not trigger an update: assign a new value (`this.items = [...this.items, item]`), or use [`@updateAfter`](#use-the-updateafter-decorator) or [`triggerUpdate`](#trigger-a-manual-update).
+>
+> Assigning an equal value does not trigger an update either: primitives are compared with `===`, dates by their value and arrays item by item.
 
 
 ### `useStore` function
@@ -197,7 +215,7 @@ export class MyClass {
   }
 }
 
-interface MyClass extends IAutotrackable<Named> { }
+interface MyClass extends IAutotrackable<MyClass> { }
 
 ```
 In this example, the `MyClass` class will have autotracking capabilities, and you can use it in your Svelte components.
@@ -261,18 +279,12 @@ And then, you can use the `Nested` class in your Svelte components like this:
   import { useStore } from "svelte-autotracking";
 
   const owner = useStore(new Owner());
-  const nested = owner.nested;
-
 </script>
-
-<h1>{$nested.count}</h1>
-
-or
 
 <h1>{$owner.nested.count}</h1>
 
-<button on:click={() => $nested.increment()}>+</button>
-<button on:click={() => $nested.decrement()}>-</button>
+<button on:click={() => $owner.nested.increment()}>+</button>
+<button on:click={() => $owner.nested.decrement()}>-</button>
 ```
 
 ### Trigger a manual update
@@ -292,7 +304,7 @@ triggerUpdate(myClass);
 
 ### Use the `@updateAfter` decorator
 
-You can use the `@updateAfter` decorator to automatically update the store when a method is called event if no property is decorated with `@tracked`.
+You can use the `@updateAfter` decorator to automatically update the store when a method is called even if no property is decorated with `@tracked`.
 
 ```ts
 
